@@ -1,6 +1,5 @@
 package com.core.back.service.impl;
 
-import com.core.back.entity.PermissionEntity;
 import com.core.back.entity.RoleEntity;
 import com.core.back.entity.UserEntity;
 import com.core.back.exception.ConflictException;
@@ -84,18 +83,6 @@ public class UserServiceImpl implements IUserService {
                             role.setName(roleRequest.getName());
                             role.setPerspective(roleRequest.getPerspective());
                             role.setActive(roleRequest.getActive());
-                            role.setPermissions(roleRequest.getPermissions() != null
-                                    ? roleRequest.getPermissions().stream()
-                                            .map(permissionRequest -> {
-                                                PermissionEntity permission = new PermissionEntity();
-                                                permission.setPermissionId(permissionRequest.getPermissionId());
-                                                permission.setName(permissionRequest.getName());
-                                                permission.setPerspective(permissionRequest.getPerspective());
-                                                permission.setActive(permissionRequest.getActive());
-                                                return permission;
-                                            })
-                                            .collect(Collectors.toList())
-                                    : null);
                             return role;
                         })
                         .collect(Collectors.toList())
