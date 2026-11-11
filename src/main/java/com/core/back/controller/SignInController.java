@@ -14,18 +14,18 @@ import com.core.back.utils.JwtUtil;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/auth")
-public class AuthenticationController {
+@RequestMapping("/v0/signin")
+public class SignInController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
-    public AuthenticationController(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    public SignInController(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
     }
 
-    @PostMapping("/signin")
+    @PostMapping
     public ResponseEntity<GenericResponse<Object>> signIn(@Valid @RequestBody SignInRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername().trim(), request.getPassword())

@@ -74,7 +74,7 @@ public class RoleRepositoryImpl implements IRoleRepository {
         jdbcTemplate.update(sql, 
                 roleRequest.getName(), 
                 roleRequest.getPerspective(), 
-                (roleRequest.getActive() != null && roleRequest.getActive()) ? 1 : 0, 
+                Boolean.TRUE.equals(roleRequest.getActive()), 
                 Timestamp.valueOf(LocalDateTime.now()), 
                 id
         );
@@ -85,7 +85,7 @@ public class RoleRepositoryImpl implements IRoleRepository {
 
     @Override
     public void deleteRole(Long id) {
-        String sql = "UPDATE ROL SET ESTADO = 0, FECHA_MODIFICACION = ? WHERE ROL_ID = ?";
+        String sql = "UPDATE ROL SET ESTADO = FALSE, FECHA_MODIFICACION = ? WHERE ROL_ID = ?";
         jdbcTemplate.update(sql, Timestamp.valueOf(LocalDateTime.now()), id);
     }
 
@@ -108,20 +108,20 @@ public class RoleRepositoryImpl implements IRoleRepository {
     @Override
     public List<RoleEntity> findRolesByUserId(Long userId) {
         String sql = "SELECT R.* FROM ROL R " +
-                     "INNER JOIN USUARIOS_ROLES UR ON R.ROL_ID = UR.ROL_ID " +
-                     "WHERE UR.USUARIO_ID = ? AND R.ESTADO = 1";
+                     "INNER JOIN USUARIO_ROL UR ON R.ROL_ID = UR.ROL_ID " +
+                     "WHERE UR.USUARIO_ID = ? AND R.ESTADO = TRUE";
         return jdbcTemplate.query(sql, rolRowMapper, userId);
     }
 
     @Override
     public void assignRoleToUser(Long userId, Long roleId) {
-        String sql = "INSERT INTO USUARIOS_ROLES (USUARIO_ID, ROL_ID, FECHA_CREACION) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO USUARIO_ROL (USUARIO_ID, ROL_ID, FECHA_CREACION) VALUES (?, ?, ?)";
         jdbcTemplate.update(sql, userId, roleId, Timestamp.valueOf(LocalDateTime.now()));
     }
 
     @Override
     public void removeRoleFromUser(Long userId, Long roleId) {
-        String sql = "DELETE FROM USUARIOS_ROLES WHERE USUARIO_ID = ? AND ROL_ID = ?";
+        String sql = "DELETE FROM USUARIO_ROL WHERE USUARIO_ID = ? AND ROL_ID = ?";
         jdbcTemplate.update(sql, userId, roleId);
     }
 

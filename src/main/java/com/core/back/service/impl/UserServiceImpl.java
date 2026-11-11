@@ -105,6 +105,18 @@ public class UserServiceImpl implements IUserService {
         return toDto(savedUser);
     }
 
+    private void assignRolesIfExist(Long userId, List<Long> roleIds) {
+        if (roleIds != null && !roleIds.isEmpty()) {
+            for (Long roleId : roleIds) {
+                if (userRepository.existsRoleById(roleId)) {
+                    userRepository.assignRoleToUser(userId, roleId);
+                } else {
+                    throw new ValidationException("Role with ID " + roleId + " does not exist.");
+                }
+            }
+        }
+    }
+
     private void validateUserData(UserRequest request) {
         if (userRepository.existsUserByEmail(request.getEmail())) {
             throw new ConflictException("Email '" + request.getEmail() + "' is already registered.");
@@ -118,23 +130,9 @@ public class UserServiceImpl implements IUserService {
             throw new ValidationException("Invalid password format.");
         }
     }
-
-    private void assignRolesIfExist(Long userId, List<Long> roleIds) {
-        if (roleIds != null && !roleIds.isEmpty()) {
-            for (Long roleId : roleIds) {
-                // Validación para evitar el ORA-02291
-                if (userRepository.existsRoleById(roleId)) {
-                    userRepository.assignRoleToUser(userId, roleId);
-                } else {
-                    throw new ValidationException("Role with ID " + roleId + " does not exist.");
-                }
-            }
-        }
-    }
     
     @Override
     public List<UserEntity> getActiveUsers() {
-        // Obtenemos el Optional y extraemos la lista, o devolvemos una lista vacía si es null/empty
         return userRepository.findActiveUsers(true).orElse(Collections.emptyList());
     }
     
@@ -147,8 +145,8 @@ public class UserServiceImpl implements IUserService {
 
     @Override
     public UserRequest updateUser(Long userId, UserRequest userRequest) {
-        UserEntity user = userRepository.findUserById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("The user to update was not found."));
+
+        UserEntity user = userRepository.findUserById(userId).orElseThrow(() -> new ResourceNotFoundException("The user to update was not found."));
         
         if (!user.getEmail().equalsIgnoreCase(userRequest.getEmail()) && userRepository.existsUserByEmail(userRequest.getEmail())) {
             throw new ConflictException("Email '" + userRequest.getEmail() + "' is already in use by another user.");

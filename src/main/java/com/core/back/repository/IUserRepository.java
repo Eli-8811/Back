@@ -10,6 +10,7 @@ public interface IUserRepository {
     Optional<UserEntity> findUserById(Long userId);
     Optional<UserEntity> findUserByEmail(String email);
     Optional<UserEntity> findUserByUsername(String username);
+    Optional<UserEntity> findUserDataByUsername(String username);
     Optional<List<UserEntity>> findActiveUsers(Boolean active);
     boolean existsUserById(Long userId);
     boolean existsUserByEmail(String email);
