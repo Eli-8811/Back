@@ -41,10 +41,10 @@ public class SecurityConfig {
 	        .authorizeHttpRequests(auth -> auth
 	            // Las rutas aquí deben ser relativas al controlador, NO incluyas /api
 	            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-	            .requestMatchers("/v1/auth/**").permitAll()
-	            .requestMatchers("/v1/usuarios/**").permitAll() 
-	            .requestMatchers("/v1/roles/**").permitAll() 
-	            .requestMatchers("/v1/permisos/**").permitAll() 
+	            .requestMatchers("/v0/auth/**").permitAll()
+	            .requestMatchers("/v0/usuarios/**").permitAll()
+	            .requestMatchers("/v0/role/**").permitAll()
+	            .requestMatchers("/v0/permisos/**").permitAll()
 	            .anyRequest().authenticated()
 	        )
 	        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

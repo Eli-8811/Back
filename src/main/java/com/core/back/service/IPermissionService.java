@@ -5,14 +5,14 @@ import java.util.List;
 
 public interface IPermissionService {
     
-    PermissionRequest guardarPermiso(PermissionRequest permisoDto);
+    PermissionRequest savePermission(PermissionRequest permissionRequest);
     
-    List<PermissionRequest> obtenerTodos();
+    List<PermissionRequest> getAllPermissions();
     
-    PermissionRequest buscarPorId(Long id);
+    PermissionRequest getPermissionById(Long id);
     
-    PermissionRequest actualizarPermiso(Long id, PermissionRequest permisoDto);
+    PermissionRequest updatePermission(Long id, PermissionRequest permissionRequest);
     
-    void eliminarPermiso(Long id);
+    void deletePermission(Long id);
     
 }

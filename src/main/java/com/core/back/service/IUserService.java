@@ -8,14 +8,14 @@ import com.core.back.payload.UserRequest;
 // ASPECTO: Abstracción (Define el contrato puro de negocio para la gestión de usuarios)
 public interface IUserService {
 
-    UserRequest guardarUsuario(UserRequest usuarioDto);
+    UserRequest createUser(UserRequest userRequest);
 
-    List<UserEntity> obtenerUsuariosActivos();
+    List<UserEntity> getActiveUsers();
 
-    UserRequest buscarUsuarioPorCorreo(String correo);
+    UserRequest getUserByEmail(String email);
 
-    UserRequest actualizarUsuario(Long usuarioId, UserRequest dto);
+    UserRequest updateUser(Long userId, UserRequest userRequest);
 
-    void eliminarUsuario(Long usuarioId);
+    void deleteUser(Long userId);
     
 }

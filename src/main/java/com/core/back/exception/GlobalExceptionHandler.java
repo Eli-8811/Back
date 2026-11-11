@@ -1,5 +1,11 @@
 package com.core.back.exception;
 
+import com.core.back.payload.GenericResponse;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.QueryTimeoutException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -8,48 +14,40 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.core.back.payload.GenericResponse;
-
-import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.Map;
 
-@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // === 1. Validación de Bean Validation (@Valid) ===
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<GenericResponse<Object>> handleValidation(MethodArgumentNotValidException ex) {
-        Map<String, String> errores = new HashMap<>();
+        Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> 
-            errores.put(error.getField(), error.getDefaultMessage())
+            errors.put(error.getField(), error.getDefaultMessage())
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new GenericResponse<>(false, "Error de validación en campos", errores));
+                .body(new GenericResponse<>(false, "Validation failed for one or more fields", errors));
     }
 
-    // === 2. Validación de Negocio Personalizada (Tu nueva excepción) ===0
     @ExceptionHandler(ValidationException.class)
     public ResponseEntity<GenericResponse<Object>> handleBusinessValidation(ValidationException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(new GenericResponse<>(false, ex.getMessage(), null));
     }
 
-    // === 3. Seguridad (Auth y Permisos) ===
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<GenericResponse<Object>> handleAuthentication(AuthenticationException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new GenericResponse<>(false, "Credenciales inválidas", null));
+                .body(new GenericResponse<>(false, "Invalid credentials", null));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<GenericResponse<Object>> handleAccessDenied(AccessDeniedException ex) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(new GenericResponse<>(false, "Acceso denegado", null));
+                .body(new GenericResponse<>(false, "Access denied", null));
     }
 
-    // === 4. Errores de Dominio (Recursos y Conflictos) ===
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<GenericResponse<Object>> handleNotFound(ResourceNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -60,14 +58,47 @@ public class GlobalExceptionHandler {
     public ResponseEntity<GenericResponse<Object>> handleConflict(ConflictException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new GenericResponse<>(false, ex.getMessage(), null));
+
     }
 
-    // === 5. Error Genérico (Capa de Seguridad Final) ===
+    @ExceptionHandler(DuplicateKeyException.class)
+    public ResponseEntity<GenericResponse<Object>> handleDuplicateKey(DuplicateKeyException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new GenericResponse<>(
+                        false,
+                        "A record with that value already exists.",
+                        null
+                ));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<GenericResponse<Object>> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new GenericResponse<>(false, "The request violates a data constraint.", null));
+    }
+
+    @ExceptionHandler(DataAccessResourceFailureException.class)
+    public ResponseEntity<GenericResponse<Object>> handleDatabaseResourceFailure(DataAccessResourceFailureException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new GenericResponse<>(false, "The database is temporarily unavailable.", null));
+    }
+
+    @ExceptionHandler(QueryTimeoutException.class)
+    public ResponseEntity<GenericResponse<Object>> handleQueryTimeout(QueryTimeoutException ex) {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .body(new GenericResponse<>(false, "The database request timed out. Please try again later.", null));
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<GenericResponse<Object>> handleDataAccess(DataAccessException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new GenericResponse<>(false, "A database operation failed.", null));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GenericResponse<Object>> handleAllExceptions(Exception ex) {
-        log.error("Error no controlado: ", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new GenericResponse<>(false, "Ocurrió un error inesperado", null));
+                .body(new GenericResponse<>(false, "An unexpected error occurred", null));
     }
     
 }

@@ -4,7 +4,6 @@ import com.core.back.entity.PermissionEntity;
 import com.core.back.entity.RoleEntity;
 import com.core.back.entity.UserEntity;
 import com.core.back.repository.IUserRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -23,75 +22,77 @@ import java.util.Map;
 import java.util.Optional;
 
 @Repository
-@RequiredArgsConstructor
 public class UserRepositoryImpl implements IUserRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
+    public UserRepositoryImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
+    }
+
     private final RowMapper<UserEntity> usuarioRowMapper = (ResultSet rs, int rowNum) -> {
         UserEntity usuario = new UserEntity();
-        usuario.setUsuarioId(rs.getLong("USUARIO_ID"));
-        usuario.setNombre(rs.getString("NOMBRE"));
-        usuario.setApellidos(rs.getString("APELLIDOS"));
-        usuario.setEdad(rs.getObject("EDAD") != null ? rs.getInt("EDAD") : null);
-        usuario.setGenero(rs.getObject("GENERO") != null ? rs.getInt("GENERO") : null);
+        usuario.setUserId(rs.getLong("USUARIO_ID"));
+        usuario.setFirstName(rs.getString("NOMBRE"));
+        usuario.setLastName(rs.getString("APELLIDOS"));
+        usuario.setAge(rs.getObject("EDAD") != null ? rs.getInt("EDAD") : null);
+        usuario.setGender(rs.getObject("GENERO") != null ? rs.getInt("GENERO") : null);
         usuario.setUsername(rs.getString("USERNAME"));
         usuario.setPassword(rs.getString("PASSWORD"));
-        usuario.setCorreo(rs.getString("CORREO"));
-        usuario.setEstado(rs.getInt("ESTADO") == 1);
-        
+        usuario.setEmail(rs.getString("CORREO"));
+        usuario.setActive(rs.getInt("ESTADO") == 1);
         Timestamp fc = rs.getTimestamp("FECHA_CREACION");
-        usuario.setFechaCreacion(fc != null ? fc.toLocalDateTime() : null);
+        usuario.setCreatedAt(fc != null ? fc.toLocalDateTime() : null);
         Timestamp fm = rs.getTimestamp("FECHA_MODIFICACION");
-        usuario.setFechaModificacion(fm != null ? fm.toLocalDateTime() : null);
+        usuario.setUpdatedAt(fm != null ? fm.toLocalDateTime() : null);
         return usuario;
     };
 
     @Override
-    public UserEntity guardar(UserEntity usuario) {
+    public UserEntity saveUser(UserEntity usuario) {
         String sql = "INSERT INTO USUARIOS (NOMBRE, APELLIDOS, EDAD, GENERO, USERNAME, PASSWORD, CORREO, ESTADO, FECHA_CREACION) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         LocalDateTime ahora = LocalDateTime.now();
-        usuario.setFechaCreacion(ahora);
+        usuario.setCreatedAt(ahora);
 
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, new String[]{"USUARIO_ID"});
-            ps.setString(1, usuario.getNombre());
-            ps.setString(2, usuario.getApellidos());
-            ps.setObject(3, usuario.getEdad());
-            ps.setObject(4, usuario.getGenero());
+            ps.setString(1, usuario.getFirstName());
+            ps.setString(2, usuario.getLastName());
+            ps.setObject(3, usuario.getAge());
+            ps.setObject(4, usuario.getGender());
             ps.setString(5, usuario.getUsername());
             ps.setString(6, usuario.getPassword());
-            ps.setString(7, usuario.getCorreo());
-            ps.setInt(8, (usuario.getEstado() != null && usuario.getEstado()) ? 1 : 0);
+            ps.setString(7, usuario.getEmail());
+            ps.setInt(8, (usuario.getActive() != null && usuario.getActive()) ? 1 : 0);
             ps.setTimestamp(9, Timestamp.valueOf(ahora));
             return ps;
         }, keyHolder);
 
         if (keyHolder.getKey() != null) {
-            usuario.setUsuarioId(keyHolder.getKey().longValue());
+            usuario.setUserId(keyHolder.getKey().longValue());
         }
         return usuario;
     }
 
     @Override
-    public void asignarRol(Long usuarioId, Long rolId) {
+    public void assignRoleToUser(Long usuarioId, Long rolId) {
         String sql = "INSERT INTO USUARIOS_ROLES (USUARIO_ID, ROL_ID, FECHA_CREACION) VALUES (?, ?, ?)";
         jdbcTemplate.update(sql, usuarioId, rolId, Timestamp.valueOf(LocalDateTime.now()));
     }
     
     @Override
-    public UserEntity actualizar(UserEntity usuario) {
+    public UserEntity updateUser(UserEntity usuario) {
         String sql = "UPDATE USUARIOS SET NOMBRE = ?, APELLIDOS = ?, EDAD = ?, GENERO = ?, CORREO = ?, FECHA_MODIFICACION = ? WHERE USUARIO_ID = ?";
         LocalDateTime ahora = LocalDateTime.now();
-        usuario.setFechaModificacion(ahora);
+        usuario.setUpdatedAt(ahora);
 
-        jdbcTemplate.update(sql, usuario.getNombre(), usuario.getApellidos(), usuario.getEdad(), usuario.getGenero(), usuario.getCorreo(), Timestamp.valueOf(ahora), usuario.getUsuarioId());
+        jdbcTemplate.update(sql, usuario.getFirstName(), usuario.getLastName(), usuario.getAge(), usuario.getGender(), usuario.getEmail(), Timestamp.valueOf(ahora), usuario.getUserId());
         return usuario;
     }
 
     @Override
-    public Optional<UserEntity> buscarPorId(Long usuarioId) {
+    public Optional<UserEntity> findUserById(Long usuarioId) {
         String sql = "SELECT * FROM USUARIOS WHERE USUARIO_ID = ?";
         try {
             return Optional.ofNullable(jdbcTemplate.queryForObject(sql, usuarioRowMapper, usuarioId));
@@ -101,19 +102,19 @@ public class UserRepositoryImpl implements IUserRepository {
     }
 
     @Override
-    public Optional<UserEntity> buscarPorCorreo(String correo) {
+    public Optional<UserEntity> findUserByEmail(String correo) {
         String sql = "SELECT * FROM USUARIOS WHERE CORREO = ?";
         return jdbcTemplate.query(sql, usuarioRowMapper, correo).stream().findFirst();
     }
 
     @Override
-    public Optional<UserEntity> buscarPorUsername(String username) {
+    public Optional<UserEntity> findUserByUsername(String username) {
         String sql = "SELECT * FROM USUARIOS WHERE USERNAME = ?";
         return jdbcTemplate.query(sql, usuarioRowMapper, username).stream().findFirst();
     }
 
     @Override
-    public Optional<List<UserEntity>> obtenerUsuariosActivos(Boolean estado) {
+    public Optional<List<UserEntity>> findActiveUsers(Boolean estado) {
         // Se agregan los campos de ESTADO, FECHA_CREACION y MODIFICACION para Roles y Permisos
         String sql = "SELECT U.*, " +
                      "R.ROL_ID, R.NOMBRE AS ROL_NOMBRE, R.PERSPECTIVA AS ROL_PERSPECTIVA, R.ESTADO AS ROL_ESTADO, R.FECHA_CREACION AS ROL_FC, R.FECHA_MODIFICACION AS ROL_FM, " +
@@ -134,17 +135,17 @@ public class UserRepositoryImpl implements IUserRepository {
                 UserEntity usuario = map.computeIfAbsent(uId, id -> {
                     try {
                         UserEntity u = new UserEntity();
-                        u.setUsuarioId(id);
-                        u.setNombre(rs.getString("NOMBRE"));
-                        u.setApellidos(rs.getString("APELLIDOS"));
-                        u.setEdad(rs.getObject("EDAD", Integer.class));
-                        u.setGenero(rs.getObject("GENERO", Integer.class));
+                        u.setUserId(id);
+                        u.setFirstName(rs.getString("NOMBRE"));
+                        u.setLastName(rs.getString("APELLIDOS"));
+                        u.setAge(rs.getObject("EDAD", Integer.class));
+                        u.setGender(rs.getObject("GENERO", Integer.class));
                         u.setUsername(rs.getString("USERNAME"));
                         u.setPassword(rs.getString("PASSWORD"));
-                        u.setCorreo(rs.getString("CORREO"));
-                        u.setEstado(rs.getInt("ESTADO") == 1);
-                        u.setFechaCreacion(rs.getTimestamp("FECHA_CREACION") != null ? rs.getTimestamp("FECHA_CREACION").toLocalDateTime() : null);
-                        u.setFechaModificacion(rs.getTimestamp("FECHA_MODIFICACION") != null ? rs.getTimestamp("FECHA_MODIFICACION").toLocalDateTime() : null);
+                        u.setEmail(rs.getString("CORREO"));
+                        u.setActive(rs.getInt("ESTADO") == 1);
+                        u.setCreatedAt(rs.getTimestamp("FECHA_CREACION") != null ? rs.getTimestamp("FECHA_CREACION").toLocalDateTime() : null);
+                        u.setUpdatedAt(rs.getTimestamp("FECHA_MODIFICACION") != null ? rs.getTimestamp("FECHA_MODIFICACION").toLocalDateTime() : null);
                         u.setRoles(new ArrayList<>());
                         return u;
                     } catch (Exception e) { return null; }
@@ -152,31 +153,31 @@ public class UserRepositoryImpl implements IUserRepository {
 
                 // 2. Procesar Rol
                 Long rId = rs.getObject("ROL_ID", Long.class);
-                if (rId != null && usuario.getRoles().stream().noneMatch(r -> r.getRolId().equals(rId))) {
+                if (rId != null && usuario.getRoles().stream().noneMatch(r -> r.getRoleId().equals(rId))) {
                     RoleEntity rol = new RoleEntity();
-                    rol.setRolId(rId);
-                    rol.setNombre(rs.getString("ROL_NOMBRE"));
-                    rol.setPerspectiva(rs.getString("ROL_PERSPECTIVA"));
-                    rol.setEstado(rs.getInt("ROL_ESTADO") == 1);
-                    rol.setFechaCreacion(rs.getTimestamp("ROL_FC") != null ? rs.getTimestamp("ROL_FC").toLocalDateTime() : null);
-                    rol.setFechaModificacion(rs.getTimestamp("ROL_FM") != null ? rs.getTimestamp("ROL_FM").toLocalDateTime() : null);
-                    rol.setPermisos(new ArrayList<>());
+                    rol.setRoleId(rId);
+                    rol.setName(rs.getString("ROL_NOMBRE"));
+                    rol.setPerspective(rs.getString("ROL_PERSPECTIVA"));
+                    rol.setActive(rs.getInt("ROL_ESTADO") == 1);
+                    rol.setCreatedAt(rs.getTimestamp("ROL_FC") != null ? rs.getTimestamp("ROL_FC").toLocalDateTime() : null);
+                    rol.setUpdatedAt(rs.getTimestamp("ROL_FM") != null ? rs.getTimestamp("ROL_FM").toLocalDateTime() : null);
+                    rol.setPermissions(new ArrayList<>());
                     usuario.getRoles().add(rol);
                 }
 
                 // 3. Procesar Permiso
                 Long pId = rs.getObject("PERMISO_ID", Long.class);
                 if (pId != null) {
-                    RoleEntity rol = usuario.getRoles().stream().filter(r -> r.getRolId().equals(rId)).findFirst().orElse(null);
-                    if (rol != null && rol.getPermisos().stream().noneMatch(p -> p.getPermisoId().equals(pId))) {
+                    RoleEntity rol = usuario.getRoles().stream().filter(r -> r.getRoleId().equals(rId)).findFirst().orElse(null);
+                    if (rol != null && rol.getPermissions().stream().noneMatch(p -> p.getPermissionId().equals(pId))) {
                         PermissionEntity permiso = new PermissionEntity();
-                        permiso.setPermisoId(pId);
-                        permiso.setNombre(rs.getString("PERMISO_NOMBRE"));
-                        permiso.setPerspectiva(rs.getString("PERMISO_PERSPECTIVA"));
-                        permiso.setEstado(rs.getInt("PERMISO_ESTADO") == 1);
-                        permiso.setFechaCreacion(rs.getTimestamp("PERMISO_FC") != null ? rs.getTimestamp("PERMISO_FC").toLocalDateTime() : null);
-                        permiso.setFechaModificacion(rs.getTimestamp("PERMISO_FM") != null ? rs.getTimestamp("PERMISO_FM").toLocalDateTime() : null);
-                        rol.getPermisos().add(permiso);
+                        permiso.setPermissionId(pId);
+                        permiso.setName(rs.getString("PERMISO_NOMBRE"));
+                        permiso.setPerspective(rs.getString("PERMISO_PERSPECTIVA"));
+                        permiso.setActive(rs.getInt("PERMISO_ESTADO") == 1);
+                        permiso.setCreatedAt(rs.getTimestamp("PERMISO_FC") != null ? rs.getTimestamp("PERMISO_FC").toLocalDateTime() : null);
+                        permiso.setUpdatedAt(rs.getTimestamp("PERMISO_FM") != null ? rs.getTimestamp("PERMISO_FM").toLocalDateTime() : null);
+                        rol.getPermissions().add(permiso);
                     }
                 }
             }
@@ -185,34 +186,34 @@ public class UserRepositoryImpl implements IUserRepository {
     }
     
     @Override
-    public boolean existePorId(Long usuarioId) {
+    public boolean existsUserById(Long usuarioId) {
         String sql = "SELECT COUNT(*) FROM USUARIOS WHERE USUARIO_ID = ?";
         Integer c = jdbcTemplate.queryForObject(sql, Integer.class, usuarioId);
         return c != null && c > 0;
     }
 
     @Override
-    public boolean existePorCorreo(String correo) {
+    public boolean existsUserByEmail(String correo) {
         String sql = "SELECT COUNT(*) FROM USUARIOS WHERE CORREO = ?";
         Integer c = jdbcTemplate.queryForObject(sql, Integer.class, correo);
         return c != null && c > 0;
     }
 
     @Override
-    public boolean existePorUsername(String username) {
+    public boolean existsUserByUsername(String username) {
         String sql = "SELECT COUNT(*) FROM USUARIOS WHERE USERNAME = ?";
         Integer c = jdbcTemplate.queryForObject(sql, Integer.class, username);
         return c != null && c > 0;
     }
 
     @Override
-    public void eliminarPorId(Long usuarioId) {
+    public void deleteUserById(Long usuarioId) {
         String sql = "DELETE FROM USUARIOS WHERE USUARIO_ID = ?";
         jdbcTemplate.update(sql, usuarioId);
     }
     
     @Override
-    public boolean existeRolPorId(Long rolId) {
+    public boolean existsRoleById(Long rolId) {
         String sql = "SELECT COUNT(*) FROM ROLES WHERE ROL_ID = ?";
         Integer count = jdbcTemplate.queryForObject(sql, Integer.class, rolId);
         return count != null && count > 0;

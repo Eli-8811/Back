@@ -7,13 +7,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IRoleRepository {
-    RoleRequest guardarRol(RoleRequest rolDto);
-    List<RoleRequest> obtenerTodos();
-    RoleRequest actualizarRol(Long id, RoleRequest rolDto);
-    void eliminarRol(Long id);
-    Optional<RoleEntity> buscarPorId(Long rolId);
-    Optional<RoleEntity> buscarPorNombre(String nombre);
-    List<RoleEntity> buscarRolesPorUsuarioId(Long usuarioId);
-    void asignarRolAUsuario(Long usuarioId, Long rolId);
-    void removerRolDeUsuario(Long usuarioId, Long rolId);
+    RoleRequest saveRole(RoleRequest roleRequest);
+    List<RoleRequest> findAllRoles();
+    RoleRequest updateRole(Long id, RoleRequest roleRequest);
+    void deleteRole(Long id);
+    Optional<RoleEntity> findRoleById(Long roleId);
+    Optional<RoleEntity> findRoleByName(String name);
+    List<RoleEntity> findRolesByUserId(Long userId);
+    void assignRoleToUser(Long userId, Long roleId);
+    void removeRoleFromUser(Long userId, Long roleId);
 }

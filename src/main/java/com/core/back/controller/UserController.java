@@ -6,8 +6,6 @@ import com.core.back.payload.UserRequest;
 import com.core.back.service.impl.UserServiceImpl;
 
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -15,62 +13,48 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@Slf4j
-@RestController // ASPECTO: Patrón de Diseño (Front Controller / MVC)
-@RequiredArgsConstructor
-@RequestMapping("/v1/usuarios")
+@RestController
+@RequestMapping("/v0/usuarios")
 public class UserController {
 
-    private final UserServiceImpl usuarioService;
+    private final UserServiceImpl userService;
 
-    // === CREAR USUARIO (Retorna 201 Created si todo sale bien) ===
-    @PostMapping
-    public ResponseEntity<GenericResponse<Object>> crearUsuario(@Valid @RequestBody UserRequest usuarioDto) {
-        log.info("REST request para crear un usuario: {}", usuarioDto.getCorreo());
-        UserRequest guardado = usuarioService.guardarUsuario(usuarioDto);
-        
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new GenericResponse<>(true, "Usuario creado exitosamente", guardado));
+    public UserController(UserServiceImpl userService) {
+        this.userService = userService;
     }
-    
-    // === OBTENER ACTIVOS (Retorna 200 OK o salta al ExceptionHandler con 404 si está vacía) ===
+
+    @PostMapping
+    public ResponseEntity<GenericResponse<Object>> createUser(@Valid @RequestBody UserRequest userRequest) {
+        UserRequest uR = userService.createUser(userRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new GenericResponse<>(true, "User created successfully", uR));
+    }
+
     @GetMapping
-    public ResponseEntity<GenericResponse<Object>> obtenerUsuariosActivos() {
-        log.info("REST request para obtener lista completa de usuarios activos");        
-        // El service lanzará ResourceNotFoundException si la lista está vacía
-        List<UserEntity> usuariosActivos = usuarioService.obtenerUsuariosActivos();        
+    public ResponseEntity<GenericResponse<Object>> getActiveUsers() {
+        List<UserEntity> users = userService.getActiveUsers();
         return ResponseEntity.ok(new GenericResponse<>(
             true, 
-            "Lista de usuarios recuperada exitosamente", 
-            usuariosActivos
+            "User list retrieved successfully",
+                users
         ));
     }
 
-    // === OBTENER POR CORREO (Retorna 200 OK o salta al ExceptionHandler con 404 si no existe) ===
-    @GetMapping("/correo/{correo}")
-    public ResponseEntity<GenericResponse<Object>> obtenerUsuarioPorCorreo(@PathVariable String correo) {
-        log.info("REST request para obtener usuario por correo: {}", correo);
-        UserRequest usuario = usuarioService.buscarUsuarioPorCorreo(correo);
-        
-        return ResponseEntity.ok(new GenericResponse<>(true, "Usuario encontrado exitosamente", usuario));
+    @GetMapping("/mail/{mail}")
+    public ResponseEntity<GenericResponse<Object>> getUserByEmail(@PathVariable String mail) {
+        UserRequest user = userService.getUserByEmail(mail);
+        return ResponseEntity.ok(new GenericResponse<>(true, "User found successfully", user));
     }
 
-    // === ACTUALIZAR USUARIO (Retorna 200 OK o arroja 404/409 según las reglas del Service) ===
-    @PutMapping("/{usuarioId}")
-    public ResponseEntity<GenericResponse<Object>> actualizarUsuario(@PathVariable Long usuarioId, @Valid @RequestBody UserRequest usuarioDto) {
-        log.info("REST request para actualizar usuario ID: {}", usuarioId);
-        UserRequest usuarioActualizado = usuarioService.actualizarUsuario(usuarioId, usuarioDto);
-        
-        return ResponseEntity.ok(new GenericResponse<>(true, "Usuario actualizado exitosamente", usuarioActualizado));
+    @PutMapping("/{userId}")
+    public ResponseEntity<GenericResponse<Object>> updateUser(@PathVariable Long userId, @Valid @RequestBody UserRequest userRequest) {
+        UserRequest uR = userService.updateUser(userId, userRequest);
+        return ResponseEntity.ok(new GenericResponse<>(true, "User updated successfully", uR));
     }
 
-    // === ELIMINAR USUARIO (Retorna 200 OK o arroja 404 si el ID no existe) ===
-    @DeleteMapping("/{usuarioId}")
-    public ResponseEntity<GenericResponse<Object>> eliminarUsuario(@PathVariable Long usuarioId) {
-        log.info("REST request para eliminar usuario ID: {}", usuarioId);
-        usuarioService.eliminarUsuario(usuarioId);
-        
-        return ResponseEntity.ok(new GenericResponse<>(true, "Usuario eliminado exitosamente", null));
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<GenericResponse<Object>> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok(new GenericResponse<>(true, "User deleted successfully", null));
     }
     
 }

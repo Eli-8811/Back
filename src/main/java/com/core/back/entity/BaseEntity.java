@@ -1,17 +1,37 @@
 package com.core.back.entity;
 
-import lombok.Getter;
-import lombok.Setter;
 import java.time.LocalDateTime;
 
 // ASPECTO: Clase Abstracta (No se puede instanciar, define una base común)
-@Getter
-@Setter
 public abstract class BaseEntity {
 
     // ASPECTO: Métodos/Atributos protegidos (Accesibles por herencia)
-	protected Boolean estado;
-    protected LocalDateTime fechaCreacion;
-    protected LocalDateTime fechaModificacion;
-    
+    protected Boolean active;
+    protected LocalDateTime createdAt;
+    protected LocalDateTime updatedAt;
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
 }

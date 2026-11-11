@@ -5,9 +5,9 @@ import java.util.List;
 import com.core.back.payload.RoleRequest;
 
 public interface IRoleService {
-    RoleRequest guardarRol(RoleRequest rolDto);
-    List<RoleRequest> obtenerTodos();
-    RoleRequest actualizarRol(Long id, RoleRequest rolDto);
-    void eliminarRol(Long id);
-    void asignarPermisosARol(Long rolId, List<Long> permisoIds);
+    RoleRequest saveRole(RoleRequest roleRequest);
+    List<RoleRequest> getAllRoles();
+    RoleRequest updateRole(Long id, RoleRequest roleRequest);
+    void deleteRole(Long id);
+    void assignPermissionsToRole(Long roleId, List<Long> permissionIds);
 }

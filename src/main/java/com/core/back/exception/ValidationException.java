@@ -8,7 +8,7 @@ public class ValidationException  extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	public ValidationException() {
-        super("Error de validación en campos");
+        super("Field validation failed.");
     }
 
     public ValidationException(String message) {

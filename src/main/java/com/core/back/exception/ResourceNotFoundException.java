@@ -8,7 +8,7 @@ public class ResourceNotFoundException extends RuntimeException {
 	private static final long serialVersionUID = 1L;
 
 	public ResourceNotFoundException() {
-        super("El recurso solicitado no fue encontrado.");
+        super("The requested resource was not found.");
     }
 
     public ResourceNotFoundException(String message) {

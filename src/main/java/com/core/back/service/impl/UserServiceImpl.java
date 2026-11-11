@@ -9,9 +9,6 @@ import com.core.back.payload.UserRequest;
 import com.core.back.repository.IUserRepository;
 import com.core.back.service.IUserService;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,75 +18,79 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Slf4j
 @Service
-@RequiredArgsConstructor // ASPECTO: Patrón de Diseño (Inyección de dependencias por constructor)
 public class UserServiceImpl implements IUserService {
 
-    private final IUserRepository usuarioRepository;
+    private final IUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     
     @Value("${app.security.password-regex}")
     private String passwordRegex;
+
+    public UserServiceImpl(IUserRepository userRepository, PasswordEncoder passwordEncoder) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
     
     private UserRequest toDto(UserEntity entidad) {
-        return UserRequest.builder()
-                .usuarioId(entidad.getUsuarioId())
-                .nombre(entidad.getNombre())
-                .apellidos(entidad.getApellidos())
-                .correo(entidad.getCorreo())
-                .edad(entidad.getEdad())
-                .genero(entidad.getGenero())
-                .username(entidad.getUsername())
-                .estado(entidad.getEstado())
-                .build();
+        return new UserRequest(
+                entidad.getUserId(),
+                entidad.getFirstName(),
+                entidad.getLastName(),
+                entidad.getAge(),
+                entidad.getGender(),
+                entidad.getUsername(),
+                null,
+                entidad.getEmail(),
+                entidad.getActive(),
+                null);
     }
 
     private UserEntity toEntity(UserRequest dto) {
-        return UserEntity.builder()
-                .usuarioId(dto.getUsuarioId())
-                .nombre(dto.getNombre() != null ? dto.getNombre().trim() : null)
-                .apellidos(dto.getApellidos() != null ? dto.getApellidos().trim() : null)
-                .correo(dto.getCorreo())
-                .edad(dto.getEdad())
-                .genero(dto.getGenero())
-                .username(dto.getUsername())
-                .password(dto.getPassword())
-                .roles(dto.getRolesIds() != null ? 
-                       dto.getRolesIds().stream()
-                          .map(id -> {
-                              RoleEntity rol = new RoleEntity();
-                              rol.setRolId(id);
-                              return rol;
-                          })
-                          .collect(Collectors.toList()) 
-                       : null)
-                .build();
+        UserEntity user = new UserEntity();
+        user.setUserId(dto.getUserId());
+        user.setFirstName(dto.getFirstName() != null ? dto.getFirstName().trim() : null);
+        user.setLastName(dto.getLastName() != null ? dto.getLastName().trim() : null);
+        user.setEmail(dto.getEmail());
+        user.setAge(dto.getAge());
+        user.setGender(dto.getGender());
+        user.setUsername(dto.getUsername());
+        user.setPassword(dto.getPassword());
+        user.setRoles(dto.getRoleIds() != null
+                ? dto.getRoleIds().stream()
+                        .map(id -> {
+                            RoleEntity role = new RoleEntity();
+                            role.setRoleId(id);
+                            return role;
+                        })
+                        .collect(Collectors.toList())
+                : null);
+        return user;
     }
     
     @Override
     @Transactional
-    public UserRequest guardarUsuario(UserRequest usuarioDto) {
+    public UserRequest createUser(UserRequest userRequest) {
         // 1. Validar reglas de negocio
-        validarDatosUsuario(usuarioDto);
+        validarDatosUsuario(userRequest);
         
         // 2. Persistir usuario
-        UserEntity entidad = toEntity(usuarioDto);
-        entidad.setPassword(passwordEncoder.encode(usuarioDto.getPassword())); 
-        UserEntity guardado = usuarioRepository.guardar(entidad);        
+        UserEntity entidad = toEntity(userRequest);
+        entidad.setPassword(passwordEncoder.encode(userRequest.getPassword())); 
+        UserEntity guardado = userRepository.saveUser(entidad);        
         
         // 3. Persistir relaciones de roles
-        asignarRolesSiExisten(guardado.getUsuarioId(), usuarioDto.getRolesIds());
+        asignarRolesSiExisten(guardado.getUserId(), userRequest.getRoleIds());
         
         return toDto(guardado);
     }
 
     private void validarDatosUsuario(UserRequest dto) {
-        if (usuarioRepository.existePorCorreo(dto.getCorreo())) {
-            throw new ConflictException("El correo '" + dto.getCorreo() + "' ya está registrado.");
+        if (userRepository.existsUserByEmail(dto.getEmail())) {
+            throw new ConflictException("Email '" + dto.getEmail() + "' is already registered.");
         }
-        if (usuarioRepository.existePorUsername(dto.getUsername())) {
-            throw new ConflictException("El usuario '" + dto.getUsername() + "' ya está en uso.");
+        if (userRepository.existsUserByUsername(dto.getUsername())) {
+            throw new ConflictException("Username '" + dto.getUsername() + "' is already in use.");
         }
         
         if (dto.getPassword() == null || !dto.getPassword().matches(passwordRegex)) {
@@ -102,10 +103,10 @@ public class UserServiceImpl implements IUserService {
         if (rolesIds != null && !rolesIds.isEmpty()) {
             for (Long rolId : rolesIds) {
                 // Validación para evitar el ORA-02291
-                if (usuarioRepository.existeRolPorId(rolId)) {
-                    usuarioRepository.asignarRol(usuarioId, rolId);
+                if (userRepository.existsRoleById(rolId)) {
+                    userRepository.assignRoleToUser(usuarioId, rolId);
                 } else {
-                    throw new ValidationException("El rol con ID " + rolId + " no existe.");
+                    throw new ValidationException("Role with ID " + rolId + " does not exist.");
                 }
             }
         }
@@ -113,50 +114,45 @@ public class UserServiceImpl implements IUserService {
     
     @Override
     @Transactional(readOnly = true)
-    public List<UserEntity> obtenerUsuariosActivos() {
-        log.info("Consultando lista de usuarios activos...");        
+    public List<UserEntity> getActiveUsers() {
         // Obtenemos el Optional y extraemos la lista, o devolvemos una lista vacía si es null/empty
-        return usuarioRepository.obtenerUsuariosActivos(true).orElse(Collections.emptyList());
+        return userRepository.findActiveUsers(true).orElse(Collections.emptyList());
     }
     
     @Override
     @Transactional(readOnly = true)
-    public UserRequest buscarUsuarioPorCorreo(String correo) {
-        log.info("Buscando usuario por correo: {}", correo);
-        return usuarioRepository.buscarPorCorreo(correo)
+    public UserRequest getUserByEmail(String email) {
+        return userRepository.findUserByEmail(email)
                 .map(this::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException("No existe usuario con el correo: " + correo));
+                .orElseThrow(() -> new ResourceNotFoundException("No user found with email: " + email));
     }
 
     @Override
     @Transactional
-    public UserRequest actualizarUsuario(Long usuarioId, UserRequest dto) {
-        log.info("Actualizando datos del usuario ID: {}", usuarioId);        
+    public UserRequest updateUser(Long userId, UserRequest userRequest) {
+        UserEntity usuario = userRepository.findUserById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("The user to update was not found."));
         
-        UserEntity usuario = usuarioRepository.buscarPorId(usuarioId)
-                .orElseThrow(() -> new ResourceNotFoundException("El usuario a actualizar no existe."));
-        
-        if (!usuario.getCorreo().equalsIgnoreCase(dto.getCorreo()) && usuarioRepository.existePorCorreo(dto.getCorreo())) {
-            throw new ConflictException("El nuevo correo '" + dto.getCorreo() + "' ya está en uso por otro perfil.");
+        if (!usuario.getEmail().equalsIgnoreCase(userRequest.getEmail()) && userRepository.existsUserByEmail(userRequest.getEmail())) {
+            throw new ConflictException("Email '" + userRequest.getEmail() + "' is already in use by another user.");
         }
         
-        usuario.setNombre(dto.getNombre() != null ? dto.getNombre().trim() : usuario.getNombre());
-        usuario.setApellidos(dto.getApellidos() != null ? dto.getApellidos().trim() : usuario.getApellidos());
-        usuario.setEdad(dto.getEdad());
-        usuario.setGenero(dto.getGenero());
-        usuario.setCorreo(dto.getCorreo());        
+        usuario.setFirstName(userRequest.getFirstName() != null ? userRequest.getFirstName().trim() : usuario.getFirstName());
+        usuario.setLastName(userRequest.getLastName() != null ? userRequest.getLastName().trim() : usuario.getLastName());
+        usuario.setAge(userRequest.getAge());
+        usuario.setGender(userRequest.getGender());
+        usuario.setEmail(userRequest.getEmail());        
         
-        return toDto(usuarioRepository.actualizar(usuario));
+        return toDto(userRepository.updateUser(usuario));
     }
 
     @Override
     @Transactional
-    public void eliminarUsuario(Long usuarioId) {
-        log.info("Solicitud de eliminación para ID: {}", usuarioId);        
-        if (!usuarioRepository.existePorId(usuarioId)) {
-            throw new ResourceNotFoundException("No se puede eliminar: El usuario con ID " + usuarioId + " no existe.");
+    public void deleteUser(Long userId) {
+        if (!userRepository.existsUserById(userId)) {
+            throw new ResourceNotFoundException("Cannot delete user: no user exists with ID " + userId + ".");
         }
-        usuarioRepository.eliminarPorId(usuarioId);
+        userRepository.deleteUserById(userId);
     }
     
 }

@@ -5,16 +5,16 @@ import java.util.Optional;
 import java.util.List;
 
 public interface IUserRepository {
-    UserEntity guardar(UserEntity usuario);
-    UserEntity actualizar(UserEntity usuario);
-    Optional<UserEntity> buscarPorId(Long usuarioId);
-    Optional<UserEntity> buscarPorCorreo(String correo);
-    Optional<UserEntity> buscarPorUsername(String username);
-    Optional<List<UserEntity>> obtenerUsuariosActivos(Boolean estado);
-    boolean existePorId(Long usuarioId);
-    boolean existePorCorreo(String correo);
-    boolean existePorUsername(String username);
-    void eliminarPorId(Long usuarioId);
-    void asignarRol(Long usuarioId, Long rolId);
-    boolean existeRolPorId(Long rolId);
+    UserEntity saveUser(UserEntity user);
+    UserEntity updateUser(UserEntity user);
+    Optional<UserEntity> findUserById(Long userId);
+    Optional<UserEntity> findUserByEmail(String email);
+    Optional<UserEntity> findUserByUsername(String username);
+    Optional<List<UserEntity>> findActiveUsers(Boolean active);
+    boolean existsUserById(Long userId);
+    boolean existsUserByEmail(String email);
+    boolean existsUserByUsername(String username);
+    void deleteUserById(Long userId);
+    void assignRoleToUser(Long userId, Long roleId);
+    boolean existsRoleById(Long roleId);
 }
