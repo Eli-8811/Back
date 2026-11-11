@@ -16,7 +16,7 @@ import java.time.Instant;
 @Component
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
-    private static final String MESSAGE = "No posees los permisos requeridos para acceder a este recurso.";
+    private static final String MESSAGE = "You do not have the required permissions to access this resource.";
 
     private final ObjectMapper objectMapper;
 

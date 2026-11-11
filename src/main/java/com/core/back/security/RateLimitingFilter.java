@@ -2,7 +2,7 @@ package com.core.back.security;
 
 import com.core.back.payload.GenericResponse;
 import com.core.back.payload.SecurityErrorDetails;
-import com.core.back.service.LoginRateLimiterService;
+import com.core.back.service.ILoginRateLimiterService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,17 +20,18 @@ import java.time.Instant;
 @Component
 public class RateLimitingFilter extends OncePerRequestFilter {
 
-    private final LoginRateLimiterService rateLimiterService;
+    private final ILoginRateLimiterService rateLimiterService;
     private final ObjectMapper objectMapper;
 
-    public RateLimitingFilter(LoginRateLimiterService rateLimiterService, ObjectMapper objectMapper) {
+    public RateLimitingFilter(ILoginRateLimiterService rateLimiterService, ObjectMapper objectMapper) {
         this.rateLimiterService = rateLimiterService;
         this.objectMapper = objectMapper;
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !("POST".equalsIgnoreCase(request.getMethod()) && "/v0/signin".equals(request.getServletPath()));
+        return !("POST".equalsIgnoreCase(request.getMethod())
+                && "/v0/auth/signin".equals(request.getServletPath()));
     }
 
     @Override

@@ -17,7 +17,7 @@ import java.time.Instant;
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
-    private static final String MESSAGE = "El token JWT ha expirado, es inválido o ha sido revocado.";
+    private static final String MESSAGE = "The JWT has expired, is invalid, or has been revoked.";
 
     private final ObjectMapper objectMapper;
 
@@ -44,4 +44,5 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
                                 "Unauthorized",
                                 request.getRequestURI())));
     }
+
 }

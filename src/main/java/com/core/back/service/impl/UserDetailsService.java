@@ -6,6 +6,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import com.core.back.entity.RoleEntity;
+import com.core.back.entity.PermissionEntity;
 import com.core.back.entity.UserEntity;
 import com.core.back.repository.IUserRepository;
 
@@ -39,7 +40,7 @@ public class UserDetailsService implements org.springframework.security.core.use
             roles.add(role.getName());
             if (role.getPermissions() != null) {
                 role.getPermissions().stream()
-                        .map(permission -> permission.getName())
+                        .map(PermissionEntity::getName)
                         .forEach(permissions::add);
             }
         }
@@ -53,4 +54,5 @@ public class UserDetailsService implements org.springframework.security.core.use
                 permissions
         );
     }
+
 }

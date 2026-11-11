@@ -1,12 +1,13 @@
-package com.core.back.service;
+package com.core.back.service.impl;
 
+import com.core.back.service.ITokenBlacklistService;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
 @Service
-public class TokenBlacklistService {
+public class TokenBlacklistService implements ITokenBlacklistService {
 
     private static final String KEY_PREFIX = "jwt:blacklist:";
     private static final String REVOKED_VALUE = "revoked";
@@ -17,6 +18,7 @@ public class TokenBlacklistService {
         this.redisTemplate = redisTemplate;
     }
 
+    @Override
     public void blacklistToken(String tokenId, long remainingExpirationMillis) {
         if (tokenId == null || tokenId.isBlank()) {
             throw new IllegalArgumentException("Token ID must not be blank");
@@ -30,10 +32,12 @@ public class TokenBlacklistService {
                 Duration.ofMillis(remainingExpirationMillis));
     }
 
+    @Override
     public boolean isTokenBlacklisted(String tokenId) {
         if (tokenId == null || tokenId.isBlank()) {
             return false;
         }
         return Boolean.TRUE.equals(redisTemplate.hasKey(KEY_PREFIX + tokenId));
     }
+
 }

@@ -2,13 +2,12 @@ package com.core.back.security;
 
 import com.core.back.utils.JwtUtil;
 import com.core.back.utils.JwtUtil.TokenClaims;
-import com.core.back.service.TokenBlacklistService;
+import com.core.back.service.impl.TokenBlacklistService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,8 +31,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
-            @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) throws ServletException, IOException {
+            HttpServletResponse response,
+            FilterChain filterChain) throws ServletException, IOException {
 
         Authentication existingAuthentication = SecurityContextHolder.getContext().getAuthentication();
         String token = resolveBearerToken(request.getHeader("Authorization"));

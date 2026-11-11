@@ -10,23 +10,23 @@ import com.core.back.payload.GenericResponse;
 import com.core.back.payload.JwtResponse;
 import com.core.back.payload.SignInRequest;
 import com.core.back.security.CustomUserDetails;
-import com.core.back.service.LoginRateLimiterService;
+import com.core.back.service.ILoginRateLimiterService;
 import com.core.back.utils.JwtUtil;
 import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/v0/signin")
+@RequestMapping("/v0/auth/signin")
 public class SignInController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-    private final LoginRateLimiterService loginRateLimiterService;
+    private final ILoginRateLimiterService loginRateLimiterService;
 
     public SignInController(
             AuthenticationManager authenticationManager,
             JwtUtil jwtUtil,
-            LoginRateLimiterService loginRateLimiterService) {
+            ILoginRateLimiterService loginRateLimiterService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
         this.loginRateLimiterService = loginRateLimiterService;

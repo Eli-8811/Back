@@ -1,7 +1,7 @@
 package com.core.back.controller;
 
 import com.core.back.payload.GenericResponse;
-import com.core.back.service.TokenBlacklistService;
+import com.core.back.service.impl.TokenBlacklistService;
 import com.core.back.utils.JwtUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

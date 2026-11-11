@@ -1,6 +1,7 @@
-package com.core.back.service;
+package com.core.back.service.impl;
 
 import jakarta.servlet.http.HttpServletRequest;
+import com.core.back.service.ILoginRateLimiterService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -15,8 +16,13 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Service
-public class LoginRateLimiterService {
+public class LoginRateLimiterService implements ILoginRateLimiterService {
+
+    private static final Logger log = LoggerFactory.getLogger(LoginRateLimiterService.class);
 
     private static final String KEY_PREFIX = "ratelimit:login:";
     private static final int MAX_ATTEMPTS = 5;
@@ -45,18 +51,20 @@ public class LoginRateLimiterService {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    @Override
     public boolean isAllowed(HttpServletRequest request) {
         String clientIp = resolveClientIp(request);
         Long attempts = redisTemplate.execute(
                 INCREMENT_SCRIPT,
                 List.of(KEY_PREFIX + clientIp),
                 Long.toString(WINDOW.toSeconds()));
-        if (attempts == null) {
-            throw new IllegalStateException("Redis did not return a login attempt count");
+        if (attempts > MAX_ATTEMPTS) {
+            log.info("Login rate limit exceeded after {} attempts (limit: {})", attempts, MAX_ATTEMPTS);
         }
         return attempts <= MAX_ATTEMPTS;
     }
 
+    @Override
     public void reset(HttpServletRequest request) {
         redisTemplate.delete(KEY_PREFIX + resolveClientIp(request));
     }
@@ -98,4 +106,5 @@ public class LoginRateLimiterService {
             throw new IllegalArgumentException("Invalid IP address in request or trusted proxy configuration", exception);
         }
     }
+
 }

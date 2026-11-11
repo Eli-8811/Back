@@ -57,7 +57,7 @@ public class SecurityConfig {
                         .accessDeniedHandler(accessDeniedHandler))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/v0/signin").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v0/auth/signin").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(rateLimitingFilter, JwtAuthenticationFilter.class);
