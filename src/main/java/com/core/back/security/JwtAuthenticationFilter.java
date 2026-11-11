@@ -2,6 +2,7 @@ package com.core.back.security;
 
 import com.core.back.utils.JwtUtil;
 import com.core.back.utils.JwtUtil.TokenClaims;
+import com.core.back.service.TokenBlacklistService;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,9 +22,11 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
 
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+    public JwtAuthenticationFilter(JwtUtil jwtUtil, TokenBlacklistService tokenBlacklistService) {
         this.jwtUtil = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @Override
@@ -41,18 +44,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             TokenClaims claims = jwtUtil.parseToken(token);
-            CustomUserDetails userDetails = new CustomUserDetails(
-                    claims.userId(),
-                    claims.username(),
-                    "",
-                    true,
-                    claims.roles(),
-                    claims.permissions());
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            userDetails, null, userDetails.getAuthorities());
-            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (tokenBlacklistService.isTokenBlacklisted(claims.tokenId())) {
+                SecurityContextHolder.clearContext();
+            } else {
+                CustomUserDetails userDetails = new CustomUserDetails(
+                        claims.userId(),
+                        claims.username(),
+                        "",
+                        true,
+                        claims.roles(),
+                        claims.permissions());
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails, null, userDetails.getAuthorities());
+                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         } catch (JwtException | IllegalArgumentException exception) {
             SecurityContextHolder.clearContext();
         }

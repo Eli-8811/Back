@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -94,6 +95,7 @@ public class JwtUtil {
                 .keyId(signingKeyId)
                 .and()
                 .subject(userDetails.getUserId().toString())
+                .id(UUID.randomUUID().toString())
                 .claim("username", userDetails.getUsername())
                 .claim("roles", userDetails.getRoles())
                 .claim("permissions", userDetails.getPermissions())
@@ -106,22 +108,40 @@ public class JwtUtil {
     public TokenClaims parseToken(String token) {
         Claims claims = parser.parseSignedClaims(token).getPayload();
         String subject = claims.getSubject();
+        String tokenId = claims.getId();
         String username = claims.get("username", String.class);
 
-        if (subject == null || username == null || username.isBlank()) {
-            throw new IllegalArgumentException("JWT must contain a subject and username");
+        if (subject == null || username == null || username.isBlank() || tokenId == null || tokenId.isBlank()) {
+            throw new IllegalArgumentException("JWT must contain a subject, username, and jti");
         }
 
         try {
             Long userId = Long.valueOf(subject);
             return new TokenClaims(
                     userId,
+                    tokenId,
                     username,
                     readStringListClaim(claims, "roles"),
                     readStringListClaim(claims, "permissions"));
         } catch (NumberFormatException exception) {
             throw new IllegalArgumentException("JWT subject must be a numeric user ID", exception);
         }
+    }
+
+    public String getTokenId(String token) {
+        String tokenId = parser.parseSignedClaims(token).getPayload().getId();
+        if (tokenId == null || tokenId.isBlank()) {
+            throw new IllegalArgumentException("JWT must contain a jti");
+        }
+        return tokenId;
+    }
+
+    public long getExpirationTimeRemaining(String token) {
+        Date expirationDate = parser.parseSignedClaims(token).getPayload().getExpiration();
+        if (expirationDate == null) {
+            throw new IllegalArgumentException("JWT must contain an expiration");
+        }
+        return Math.max(0L, expirationDate.getTime() - System.currentTimeMillis());
     }
 
     private List<String> readStringListClaim(Claims claims, String claimName) {
@@ -214,6 +234,11 @@ public class JwtUtil {
         }
     }
 
-    public record TokenClaims(Long userId, String username, List<String> roles, List<String> permissions) {
+    public record TokenClaims(
+            Long userId,
+            String tokenId,
+            String username,
+            List<String> roles,
+            List<String> permissions) {
     }
 }

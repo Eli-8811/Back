@@ -10,8 +10,10 @@ import com.core.back.payload.GenericResponse;
 import com.core.back.payload.JwtResponse;
 import com.core.back.payload.SignInRequest;
 import com.core.back.security.CustomUserDetails;
+import com.core.back.service.LoginRateLimiterService;
 import com.core.back.utils.JwtUtil;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/v0/signin")
@@ -19,17 +21,25 @@ public class SignInController {
 
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final LoginRateLimiterService loginRateLimiterService;
 
-    public SignInController(AuthenticationManager authenticationManager, JwtUtil jwtUtil) {
+    public SignInController(
+            AuthenticationManager authenticationManager,
+            JwtUtil jwtUtil,
+            LoginRateLimiterService loginRateLimiterService) {
         this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.loginRateLimiterService = loginRateLimiterService;
     }
 
     @PostMapping
-    public ResponseEntity<GenericResponse<Object>> signIn(@Valid @RequestBody SignInRequest request) {
+    public ResponseEntity<GenericResponse<Object>> signIn(
+            @Valid @RequestBody SignInRequest request,
+            HttpServletRequest httpRequest) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername().trim(), request.getPassword())
         );
+        loginRateLimiterService.reset(httpRequest);
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         String token = jwtUtil.generateToken(userDetails);
         JwtResponse jwtResponse = new JwtResponse("Bearer", token);

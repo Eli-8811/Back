@@ -47,5 +47,9 @@ public class GenericResponse<T> {
     public static <T> GenericResponse<T> error(String message) {
         return new GenericResponse<>(false, message, null);
     }
+
+    public static <T> GenericResponse<T> error(String message, T data) {
+        return new GenericResponse<>(false, message, data);
+    }
     
 }
