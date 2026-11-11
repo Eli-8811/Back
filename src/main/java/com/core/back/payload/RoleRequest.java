@@ -1,5 +1,8 @@
 package com.core.back.payload;
 
+import java.util.List;
+
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -16,14 +19,23 @@ public class RoleRequest {
 
     private Boolean active;
 
+    @Valid
+    private List<PermissionRequest> permissions;
+
     public RoleRequest() {
     }
 
     public RoleRequest(Long roleId, String name, String perspective, Boolean active) {
+        this(roleId, name, perspective, active, null);
+    }
+
+    public RoleRequest(Long roleId, String name, String perspective, Boolean active,
+                       List<PermissionRequest> permissions) {
         this.roleId = roleId;
         this.name = name;
         this.perspective = perspective;
         this.active = active;
+        this.permissions = permissions;
     }
 
     public Long getRoleId() {
@@ -56,6 +68,14 @@ public class RoleRequest {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public List<PermissionRequest> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(List<PermissionRequest> permissions) {
+        this.permissions = permissions;
     }
     
 }

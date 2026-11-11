@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/v1/permisos")
+@RequestMapping("/v0/permission")
 public class PermissionController {
 
     private final IPermissionService permissionService;

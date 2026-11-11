@@ -5,11 +5,8 @@ import com.core.back.repository.IPermissionRepository;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -30,7 +27,7 @@ public class PermissionRepositoryImpl implements IPermissionRepository {
 		permission.setPermissionId(rs.getLong("PERMISO_ID"));
 		permission.setName(rs.getString("NOMBRE"));
 		permission.setPerspective(rs.getString("PERSPECTIVA"));
-		permission.setActive(rs.getInt("ESTADO") == 1);
+		permission.setActive(rs.getObject("ESTADO", Boolean.class));
 		Timestamp fc = rs.getTimestamp("FECHA_CREACION");
 		permission.setCreatedAt(fc != null ? fc.toLocalDateTime() : null);
 		Timestamp fm = rs.getTimestamp("FECHA_MODIFICACION");
@@ -51,7 +48,7 @@ public class PermissionRepositoryImpl implements IPermissionRepository {
 	@Override
 	public List<PermissionEntity> findPermissionsByRoleId(Long roleId) {
 		String sql = "SELECT P.* FROM PERMISO P " + "INNER JOIN ROL_PERMISO RP ON P.PERMISO_ID = RP.PERMISO_ID "
-				+ "WHERE RP.ROL_ID = ? AND P.ESTADO = 1";
+				+ "WHERE RP.ROL_ID = ? AND P.ESTADO = TRUE";
 		return jdbcTemplate.query(sql, permisoRowMapper, roleId);
 	}
 
@@ -75,36 +72,30 @@ public class PermissionRepositoryImpl implements IPermissionRepository {
 
 	@Override
 	public PermissionEntity savePermission(PermissionEntity permiso) {
-		String sql = "INSERT INTO PERMISO (NOMBRE, PERSPECTIVA, ESTADO, FECHA_CREACION) VALUES (?, ?, ?, ?)";
-
-		KeyHolder keyHolder = new GeneratedKeyHolder();
-
-		jdbcTemplate.update(connection -> {
-			PreparedStatement ps = connection.prepareStatement(sql, new String[] { "PERMISO_ID" });
-			ps.setString(1, permiso.getName());
-			ps.setString(2, permiso.getPerspective());
-			ps.setInt(3, permiso.getActive() ? 1 : 0);
-			ps.setTimestamp(4, Timestamp.valueOf(LocalDateTime.now()));
-			return ps;
-		}, keyHolder);
-
-		if (keyHolder.getKey() != null) {
-			permiso.setPermissionId(keyHolder.getKey().longValue());
-		}
+		String sql = "INSERT INTO PERMISO (NOMBRE, PERSPECTIVA, ESTADO, FECHA_CREACION) "
+				+ "VALUES (?, ?, ?, ?) RETURNING PERMISO_ID";
+		Long permissionId = jdbcTemplate.queryForObject(
+				sql,
+				Long.class,
+				permiso.getName(),
+				permiso.getPerspective(),
+				Boolean.TRUE.equals(permiso.getActive()),
+				Timestamp.valueOf(LocalDateTime.now()));
+		permiso.setPermissionId(permissionId);
 		return permiso;
 	}
 
 	@Override
 	public void updatePermission(PermissionEntity permiso) {
 		String sql = "UPDATE PERMISO SET NOMBRE = ?, PERSPECTIVA = ?, ESTADO = ?, FECHA_MODIFICACION = ? WHERE PERMISO_ID = ?";
-		jdbcTemplate.update(sql, permiso.getName(), permiso.getPerspective(), permiso.getActive() ? 1 : 0,
+		jdbcTemplate.update(sql, permiso.getName(), permiso.getPerspective(), Boolean.TRUE.equals(permiso.getActive()),
 				Timestamp.valueOf(LocalDateTime.now()), permiso.getPermissionId());
 	}
 
 	@Override
 	public void deletePermission(Long permisoId) {
 		// Borrado lógico
-		String sql = "UPDATE PERMISO SET ESTADO = 0 WHERE PERMISO_ID = ?";
+		String sql = "UPDATE PERMISO SET ESTADO = FALSE WHERE PERMISO_ID = ?";
 		jdbcTemplate.update(sql, permisoId);
 	}
 

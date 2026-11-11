@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/v0/usuarios")
+@RequestMapping("/v0/user")
 public class UserController {
 
     private final UserServiceImpl userService;

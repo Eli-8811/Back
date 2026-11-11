@@ -42,9 +42,9 @@ public class SecurityConfig {
 	            // Las rutas aquí deben ser relativas al controlador, NO incluyas /api
 	            .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 	            .requestMatchers("/v0/auth/**").permitAll()
-	            .requestMatchers("/v0/usuarios/**").permitAll()
+	            .requestMatchers("/v0/user/**").permitAll()
 	            .requestMatchers("/v0/role/**").permitAll()
-	            .requestMatchers("/v0/permisos/**").permitAll()
+	            .requestMatchers("/v0/permission/**").permitAll()
 	            .anyRequest().authenticated()
 	        )
 	        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

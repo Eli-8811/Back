@@ -2,6 +2,7 @@ package com.core.back.payload;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
@@ -22,13 +23,14 @@ public class UserRequest {
     @NotBlank(message = "Email is required.")
     private String email;
     private Boolean active;
-    private List<Long> roleIds;
+    @Valid
+    private List<RoleRequest> roles;
 
     public UserRequest() {
     }
 
     public UserRequest(Long userId, String firstName, String lastName, Integer age, Integer gender,
-                       String username, String password, String email, Boolean active, List<Long> roleIds) {
+                       String username, String password, String email, Boolean active, List<RoleRequest> roles) {
         this.userId = userId;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -38,7 +40,7 @@ public class UserRequest {
         this.password = password;
         this.email = email;
         this.active = active;
-        this.roleIds = roleIds;
+        this.roles = roles;
     }
 
     public Long getUserId() {
@@ -113,12 +115,12 @@ public class UserRequest {
         this.active = active;
     }
 
-    public List<Long> getRoleIds() {
-        return roleIds;
+    public List<RoleRequest> getRoles() {
+        return roles;
     }
 
-    public void setRoleIds(List<Long> roleIds) {
-        this.roleIds = roleIds;
+    public void setRoles(List<RoleRequest> roles) {
+        this.roles = roles;
     }
 
 }
