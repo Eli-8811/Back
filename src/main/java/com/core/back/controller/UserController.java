@@ -3,7 +3,7 @@ package com.core.back.controller;
 import com.core.back.entity.UserEntity;
 import com.core.back.payload.GenericResponse;
 import com.core.back.payload.UserRequest;
-import com.core.back.service.impl.UserServiceImpl;
+import com.core.back.service.IUserService;
 
 import jakarta.validation.Valid;
 
@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/v0/user")
 public class UserController {
 
-    private final UserServiceImpl userService;
+    private final IUserService userService;
 
-    public UserController(UserServiceImpl userService) {
+    public UserController(IUserService userService) {
         this.userService = userService;
     }
 

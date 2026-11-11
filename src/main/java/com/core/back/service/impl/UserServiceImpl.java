@@ -10,7 +10,8 @@ import com.core.back.payload.RoleRequest;
 import com.core.back.payload.UserRequest;
 import com.core.back.repository.IUserRepository;
 import com.core.back.service.IUserService;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements IUserService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     private final IUserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     
@@ -102,6 +104,7 @@ public class UserServiceImpl implements IUserService {
                         .collect(Collectors.toList())
                 : null;
         assignRolesIfExist(savedUser.getUserId(), roles);
+        log.info("User created with ID {}", savedUser.getUserId());
         return toDto(savedUser);
     }
 
@@ -158,7 +161,9 @@ public class UserServiceImpl implements IUserService {
         user.setGender(userRequest.getGender());
         user.setEmail(userRequest.getEmail());
         
-        return toDto(userRepository.updateUser(user));
+        UserEntity updatedUser = userRepository.updateUser(user);
+        log.info("User updated with ID {}", userId);
+        return toDto(updatedUser);
     }
 
     @Override
@@ -167,6 +172,7 @@ public class UserServiceImpl implements IUserService {
             throw new ResourceNotFoundException("Cannot delete user: no user exists with ID " + userId + ".");
         }
         userRepository.deleteUserById(userId);
+        log.info("User deleted with ID {}", userId);
     }
     
 }

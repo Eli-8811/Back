@@ -8,6 +8,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.Locator;
 import io.jsonwebtoken.LocatorAdapter;
 import io.jsonwebtoken.UnsupportedJwtException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
@@ -35,6 +37,7 @@ import java.util.UUID;
 @Component
 public class JwtUtil {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtUtil.class);
     private static final int MIN_RSA_KEY_SIZE = 2048;
 
     private final PrivateKey signingKey;
@@ -86,6 +89,8 @@ public class JwtUtil {
         this.parser = Jwts.parser()
                 .keyLocator(keyLocator)
                 .build();
+        log.info("JWT signing initialized with key ID {} and {} verification key(s)",
+                this.signingKeyId, this.verificationKeys.size());
     }
 
     public String generateToken(CustomUserDetails userDetails) {

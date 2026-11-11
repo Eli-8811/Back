@@ -9,6 +9,8 @@ import com.core.back.entity.RoleEntity;
 import com.core.back.entity.PermissionEntity;
 import com.core.back.entity.UserEntity;
 import com.core.back.repository.IUserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.List;
 @Service
 public class UserDetailsService implements org.springframework.security.core.userdetails.UserDetailsService {
 
+    private static final Logger log = LoggerFactory.getLogger(UserDetailsService.class);
     private final IUserRepository userRepository;
 
     public UserDetailsService(IUserRepository userRepository) {
@@ -33,6 +36,7 @@ public class UserDetailsService implements org.springframework.security.core.use
 
         UserEntity user = userRepository.findUserDataByUsername(trimmedUsername)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + trimmedUsername));
+        log.debug("Loaded user details for authentication");
         List<RoleEntity> userRoles = user.getRoles() != null ? user.getRoles() : List.of();
         LinkedHashSet<String> roles = new LinkedHashSet<>();
         LinkedHashSet<String> permissions = new LinkedHashSet<>();

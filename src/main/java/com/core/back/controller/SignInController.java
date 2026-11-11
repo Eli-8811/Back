@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
-@RequestMapping("/v0/auth/signin")
+@RequestMapping("/v0/signin")
 public class SignInController {
 
     private final AuthenticationManager authenticationManager;

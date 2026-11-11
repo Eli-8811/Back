@@ -1,6 +1,8 @@
 package com.core.back.service.impl;
 
 import com.core.back.service.ITokenBlacklistService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -9,6 +11,7 @@ import java.time.Duration;
 @Service
 public class TokenBlacklistService implements ITokenBlacklistService {
 
+    private static final Logger log = LoggerFactory.getLogger(TokenBlacklistService.class);
     private static final String KEY_PREFIX = "jwt:blacklist:";
     private static final String REVOKED_VALUE = "revoked";
 
@@ -30,6 +33,7 @@ public class TokenBlacklistService implements ITokenBlacklistService {
                 KEY_PREFIX + tokenId,
                 REVOKED_VALUE,
                 Duration.ofMillis(remainingExpirationMillis));
+        log.info("JWT revoked and added to blacklist");
     }
 
     @Override

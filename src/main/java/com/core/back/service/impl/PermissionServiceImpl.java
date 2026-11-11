@@ -5,6 +5,8 @@ import com.core.back.exception.ResourceNotFoundException;
 import com.core.back.payload.PermissionRequest;
 import com.core.back.repository.IPermissionRepository;
 import com.core.back.service.IPermissionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,7 @@ import java.util.stream.Collectors;
 @Service
 public class PermissionServiceImpl implements IPermissionService {
 
+    private static final Logger log = LoggerFactory.getLogger(PermissionServiceImpl.class);
     private final IPermissionRepository permissionRepository;
 
     public PermissionServiceImpl(IPermissionRepository permissionRepository) {
@@ -29,6 +32,7 @@ public class PermissionServiceImpl implements IPermissionService {
         permissionEntity.setActive(permissionRequest.getActive());
         PermissionEntity pE = permissionRepository.savePermission(permissionEntity);
         permissionRequest.setPermissionId(pE.getPermissionId());
+        log.info("Permission created with ID {}", pE.getPermissionId());
         return permissionRequest;
     }
 
@@ -65,6 +69,7 @@ public class PermissionServiceImpl implements IPermissionService {
         permissionEntity.setActive(permissionRequest.getActive() != null ? permissionRequest.getActive() : permissionEntity.getActive());
         permissionRepository.updatePermission(permissionEntity);
         permissionRequest.setPermissionId(id);
+        log.info("Permission updated with ID {}", id);
         return permissionRequest;
     }
 
@@ -73,6 +78,7 @@ public class PermissionServiceImpl implements IPermissionService {
     public void deletePermission(Long id) {
         permissionRepository.findPermissionById(id).orElseThrow(() -> new ResourceNotFoundException("Cannot delete permission: no permission exists with ID " + id));
         permissionRepository.deletePermission(id);
+        log.info("Permission deleted with ID {}", id);
     }
     
 }
