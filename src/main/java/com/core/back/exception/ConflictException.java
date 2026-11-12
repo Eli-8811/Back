@@ -2,7 +2,8 @@ package com.core.back.exception;
 
 import java.io.Serial;
 
-public class ConflictException extends RuntimeException {
+public class
+ConflictException extends RuntimeException {
 
     /**
 	 * 
