@@ -11,26 +11,23 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/v0/signout")
-public class LogoutController {
+public class SignOutController {
 
     private final JwtUtil jwtUtil;
     private final ITokenBlacklistService tokenBlacklistService;
 
-    public LogoutController(JwtUtil jwtUtil, ITokenBlacklistService tokenBlacklistService) {
+    public SignOutController(JwtUtil jwtUtil, ITokenBlacklistService tokenBlacklistService) {
         this.jwtUtil = jwtUtil;
         this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @PostMapping
     public ResponseEntity<GenericResponse<Void>> logout(@RequestHeader("Authorization") String authorizationHeader) {
-
         String token = resolveBearerToken(authorizationHeader);
         JwtUtil.TokenClaims claims = jwtUtil.parseToken(token);
         long remainingExpirationMillis = jwtUtil.getExpirationTimeRemaining(token);
         tokenBlacklistService.blacklistToken(claims.tokenId(), remainingExpirationMillis);
-
         return ResponseEntity.ok(GenericResponse.ok("Session closed successfully.", null));
-
     }
 
     private String resolveBearerToken(String authorizationHeader) {
@@ -43,4 +40,5 @@ public class LogoutController {
         }
         return token;
     }
+
 }

@@ -19,6 +19,7 @@ import java.util.List;
 public class UserDetailsService implements org.springframework.security.core.userdetails.UserDetailsService {
 
     private static final Logger log = LoggerFactory.getLogger(UserDetailsService.class);
+
     private final IUserRepository userRepository;
 
     public UserDetailsService(IUserRepository userRepository) {

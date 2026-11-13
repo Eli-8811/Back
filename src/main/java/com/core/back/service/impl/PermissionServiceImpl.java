@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 public class PermissionServiceImpl implements IPermissionService {
 
     private static final Logger log = LoggerFactory.getLogger(PermissionServiceImpl.class);
+
     private final IPermissionRepository permissionRepository;
 
     public PermissionServiceImpl(IPermissionRepository permissionRepository) {
@@ -36,49 +37,4 @@ public class PermissionServiceImpl implements IPermissionService {
         return permissionRequest;
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<PermissionRequest> getAllPermissions() {
-        return permissionRepository.findAllPermissions().stream()
-                .map(p -> new PermissionRequest(
-                        p.getPermissionId(),
-                        p.getName(),
-                        p.getPerspective(),
-                        p.getActive()))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PermissionRequest getPermissionById(Long id) {
-        return permissionRepository.findPermissionById(id)
-                .map(p -> new PermissionRequest(
-                        p.getPermissionId(),
-                        p.getName(),
-                        p.getPerspective(),
-                        p.getActive()))
-                .orElseThrow(() -> new ResourceNotFoundException("Permission not found with ID: " + id));
-    }
-
-    @Override
-    @Transactional
-    public PermissionRequest updatePermission(Long id, PermissionRequest permissionRequest) {
-        PermissionEntity permissionEntity = permissionRepository.findPermissionById(id).orElseThrow(() -> new ResourceNotFoundException("Permission to update not found with ID: " + id));
-        permissionEntity.setName(permissionRequest.getName());
-        permissionEntity.setPerspective(permissionRequest.getPerspective());
-        permissionEntity.setActive(permissionRequest.getActive() != null ? permissionRequest.getActive() : permissionEntity.getActive());
-        permissionRepository.updatePermission(permissionEntity);
-        permissionRequest.setPermissionId(id);
-        log.info("Permission updated with ID {}", id);
-        return permissionRequest;
-    }
-
-    @Override
-    @Transactional
-    public void deletePermission(Long id) {
-        permissionRepository.findPermissionById(id).orElseThrow(() -> new ResourceNotFoundException("Cannot delete permission: no permission exists with ID " + id));
-        permissionRepository.deletePermission(id);
-        log.info("Permission deleted with ID {}", id);
-    }
-    
 }

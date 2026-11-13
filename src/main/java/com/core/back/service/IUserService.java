@@ -10,12 +10,6 @@ public interface IUserService {
 
     UserRequest createUser(UserRequest userRequest);
 
-    List<UserEntity> getActiveUsers();
+    UserRequest getUserDataByUsername(String username);
 
-    UserRequest getUserByEmail(String email);
-
-    UserRequest updateUser(Long userId, UserRequest userRequest);
-
-    void deleteUser(Long userId);
-    
 }

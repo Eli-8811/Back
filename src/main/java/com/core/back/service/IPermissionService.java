@@ -7,12 +7,4 @@ public interface IPermissionService {
     
     PermissionRequest savePermission(PermissionRequest permissionRequest);
     
-    List<PermissionRequest> getAllPermissions();
-    
-    PermissionRequest getPermissionById(Long id);
-    
-    PermissionRequest updatePermission(Long id, PermissionRequest permissionRequest);
-    
-    void deletePermission(Long id);
-    
 }

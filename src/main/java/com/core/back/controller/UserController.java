@@ -29,32 +29,10 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new GenericResponse<>(true, "User created successfully", uR));
     }
 
-    @GetMapping
-    public ResponseEntity<GenericResponse<Object>> getActiveUsers() {
-        List<UserEntity> users = userService.getActiveUsers();
-        return ResponseEntity.ok(new GenericResponse<>(
-            true, 
-            "User list retrieved successfully",
-                users
-        ));
-    }
-
-    @GetMapping("/mail/{mail}")
-    public ResponseEntity<GenericResponse<Object>> getUserByEmail(@PathVariable String mail) {
-        UserRequest user = userService.getUserByEmail(mail);
+    @GetMapping("/username/{username}")
+    public ResponseEntity<GenericResponse<Object>> getUserDataByUsername(@PathVariable String username) {
+        UserRequest user = userService.getUserDataByUsername(username);
         return ResponseEntity.ok(new GenericResponse<>(true, "User found successfully", user));
     }
 
-    @PutMapping("/{userId}")
-    public ResponseEntity<GenericResponse<Object>> updateUser(@PathVariable Long userId, @Valid @RequestBody UserRequest userRequest) {
-        UserRequest uR = userService.updateUser(userId, userRequest);
-        return ResponseEntity.ok(new GenericResponse<>(true, "User updated successfully", uR));
-    }
-
-    @DeleteMapping("/{userId}")
-    public ResponseEntity<GenericResponse<Object>> deleteUser(@PathVariable Long userId) {
-        userService.deleteUser(userId);
-        return ResponseEntity.ok(new GenericResponse<>(true, "User deleted successfully", null));
-    }
-    
 }

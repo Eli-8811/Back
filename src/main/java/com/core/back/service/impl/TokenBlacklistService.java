@@ -12,6 +12,7 @@ import java.time.Duration;
 public class TokenBlacklistService implements ITokenBlacklistService {
 
     private static final Logger log = LoggerFactory.getLogger(TokenBlacklistService.class);
+
     private static final String KEY_PREFIX = "jwt:blacklist:";
     private static final String REVOKED_VALUE = "revoked";
 
