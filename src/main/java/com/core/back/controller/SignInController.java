@@ -7,48 +7,42 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.core.back.payload.GenericResponse;
-import com.core.back.payload.JwtResponse;
+import com.core.back.payload.MfaChallengeResponse;
 import com.core.back.payload.SignInRequest;
 import com.core.back.security.CustomUserDetails;
-import com.core.back.service.ILoginRateLimiterService;
-import com.core.back.utils.JwtUtil;
+import com.core.back.service.impl.MfaService;
 import jakarta.validation.Valid;
-import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/v0/signin")
 public class SignInController {
 
-    private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
-    private final ILoginRateLimiterService loginRateLimiterService;
+    private final MfaService mfaService;
 
     public SignInController(
-            JwtUtil jwtUtil,
             AuthenticationManager authenticationManager,
-            ILoginRateLimiterService loginRateLimiterService) {
-        this.jwtUtil = jwtUtil;
+            MfaService mfaService) {
         this.authenticationManager = authenticationManager;
-        this.loginRateLimiterService = loginRateLimiterService;
+        this.mfaService = mfaService;
     }
 
     @PostMapping
-    public ResponseEntity<GenericResponse<Object>> signIn(@Valid @RequestBody SignInRequest signInRequest, HttpServletRequest httpRequest) {
+    public ResponseEntity<GenericResponse<MfaChallengeResponse>> signIn(
+            @Valid @RequestBody SignInRequest signInRequest) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(signInRequest.getUsername().trim(), signInRequest.getPassword())
         );
 
-        loginRateLimiterService.reset(httpRequest);
-
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-
-        String token = jwtUtil.generateToken(userDetails);
-
-        JwtResponse jwtResponse = new JwtResponse("Bearer", token);
-
-        return ResponseEntity.ok(new GenericResponse<>(true, "Authentication completed successfully.", jwtResponse));
-
+        MfaChallengeResponse challenge = mfaService.begin(userDetails);
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(new GenericResponse<>(
+                        true,
+                        "Password accepted. Complete the required MFA step to finish signing in.",
+                        challenge));
     }
 
 }

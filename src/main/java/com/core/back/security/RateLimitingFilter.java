@@ -31,8 +31,11 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
+        String path = request.getServletPath();
         return !("POST".equalsIgnoreCase(request.getMethod())
-                && "/v0/signin".equals(request.getServletPath()));
+                && ("/v0/signin".equals(path)
+                || "/v0/mfa/verify".equals(path)
+                || "/v0/mfa/enroll/confirm".equals(path)));
     }
 
     @Override
