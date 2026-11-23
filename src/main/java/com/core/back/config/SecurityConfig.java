@@ -59,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v0/signin").permitAll()
                         .requestMatchers(HttpMethod.POST, "/v0/mfa/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v0/token/refresh").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(rateLimitingFilter, JwtAuthenticationFilter.class);

@@ -10,7 +10,11 @@ Sign-in requires a TOTP authenticator app. After the password is accepted, `POST
 
 Complete first-time setup with `POST /api/v0/mfa/enroll/confirm`, sending `challengeToken` and `code`. Complete a later sign-in with `POST /api/v0/mfa/verify`, sending `challengeToken` and either `code` or `recoveryCode`. A successful response contains the normal Bearer JWT. Initial enrollment also returns ten one-use recovery codes; show and store them securely because they are not returned again. A challenge expires after five minutes and cannot be reused.
 
-The authenticator uses RFC 6238 TOTP with a 30-second period and six digits. Each accepted TOTP time step can be used only once per account. Login and MFA completion attempts share the existing limit of five requests per minute per client IP.
+The authenticator uses RFC 6238 TOTP with a 30-second period and six digits. Each accepted TOTP time step can be used only once per account. Login, MFA completion, and token refresh attempts share the existing limit of five requests per minute per client IP.
+
+After MFA succeeds, the response also includes `refreshToken` and `refreshTokenExpiresInSeconds` (30 days by default). The 30-day lifetime is fixed from MFA completion and is not extended by rotation. Keep the refresh token in secure client-side storage. When the short-lived access token expires, call `POST /api/v0/token/refresh` with `{"refreshToken":"..."}`. The response has a new access token and a rotated refresh token; replace the old refresh token immediately because it cannot be reused. Refresh tokens are stored as hashes in Redis. Configure the lifetime with `JWT_REFRESH_EXPIRATION_SECONDS`.
+
+To close the session, call `POST /api/v0/signout` with the access token in the `Authorization: Bearer ...` header and `{"refreshToken":"..."}` in the JSON body. This revokes both tokens. Omitting the body preserves compatibility with access-token-only clients but does not revoke the refresh token.
 
 ### Deployment
 

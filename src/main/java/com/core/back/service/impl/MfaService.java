@@ -45,6 +45,7 @@ public class MfaService {
     private final MfaSecretCipher secretCipher;
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
+    private final RefreshTokenService refreshTokenService;
     private final String issuer;
 
     public MfaService(
@@ -54,6 +55,7 @@ public class MfaService {
             MfaSecretCipher secretCipher,
             JwtUtil jwtUtil,
             UserDetailsService userDetailsService,
+            RefreshTokenService refreshTokenService,
             @Value("${app.security.mfa.issuer:Back}") String issuer) {
         this.mfaRepository = mfaRepository;
         this.redisTemplate = redisTemplate;
@@ -61,6 +63,7 @@ public class MfaService {
         this.secretCipher = secretCipher;
         this.jwtUtil = jwtUtil;
         this.userDetailsService = userDetailsService;
+        this.refreshTokenService = refreshTokenService;
         this.issuer = issuer;
     }
 
@@ -108,10 +111,14 @@ public class MfaService {
                 secretCipher.encrypt(secret),
                 matchedStep,
                 recoveryCodeHashes);
+        String accessToken = jwtUtil.generateToken(userDetails);
+        String refreshToken = refreshTokenService.issue(userDetails);
 
         return new MfaCompletionResponse(
-                new JwtResponse("Bearer", jwtUtil.generateToken(userDetails)),
-                recoveryCodes);
+                new JwtResponse("Bearer", accessToken),
+                recoveryCodes,
+                refreshToken,
+                refreshTokenService.getExpirationSeconds());
     }
 
     public MfaCompletionResponse verify(
@@ -149,9 +156,13 @@ public class MfaService {
             throw invalidCredentials();
         }
 
+        String accessToken = jwtUtil.generateToken(userDetails);
+        String refreshToken = refreshTokenService.issue(userDetails);
         return new MfaCompletionResponse(
-                new JwtResponse("Bearer", jwtUtil.generateToken(userDetails)),
-                List.of());
+                new JwtResponse("Bearer", accessToken),
+                List.of(),
+                refreshToken,
+                refreshTokenService.getExpirationSeconds());
     }
 
     private String createChallenge(Challenge challenge) {

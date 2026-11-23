@@ -35,7 +35,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         return !("POST".equalsIgnoreCase(request.getMethod())
                 && ("/v0/signin".equals(path)
                 || "/v0/mfa/verify".equals(path)
-                || "/v0/mfa/enroll/confirm".equals(path)));
+                || "/v0/mfa/enroll/confirm".equals(path)
+                || "/v0/token/refresh".equals(path)));
     }
 
     @Override

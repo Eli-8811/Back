@@ -4,5 +4,7 @@ import java.util.List;
 
 public record MfaCompletionResponse(
         JwtResponse authentication,
-        List<String> recoveryCodes) {
+        List<String> recoveryCodes,
+        String refreshToken,
+        long refreshTokenExpiresInSeconds) {
 }
