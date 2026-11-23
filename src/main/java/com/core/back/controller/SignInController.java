@@ -19,30 +19,36 @@ import jakarta.servlet.http.HttpServletRequest;
 @RequestMapping("/v0/signin")
 public class SignInController {
 
-    private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
+    private final AuthenticationManager authenticationManager;
     private final ILoginRateLimiterService loginRateLimiterService;
 
     public SignInController(
-            AuthenticationManager authenticationManager,
             JwtUtil jwtUtil,
+            AuthenticationManager authenticationManager,
             ILoginRateLimiterService loginRateLimiterService) {
-        this.authenticationManager = authenticationManager;
         this.jwtUtil = jwtUtil;
+        this.authenticationManager = authenticationManager;
         this.loginRateLimiterService = loginRateLimiterService;
     }
 
     @PostMapping
-    public ResponseEntity<GenericResponse<Object>> signIn(
-            @Valid @RequestBody SignInRequest request,
-            HttpServletRequest httpRequest) {
+    public ResponseEntity<GenericResponse<Object>> signIn(@Valid @RequestBody SignInRequest signInRequest, HttpServletRequest httpRequest) {
+
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername().trim(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(signInRequest.getUsername().trim(), signInRequest.getPassword())
         );
+
         loginRateLimiterService.reset(httpRequest);
+
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
         String token = jwtUtil.generateToken(userDetails);
+
         JwtResponse jwtResponse = new JwtResponse("Bearer", token);
+
         return ResponseEntity.ok(new GenericResponse<>(true, "Authentication completed successfully.", jwtResponse));
+
     }
+
 }

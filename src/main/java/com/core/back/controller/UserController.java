@@ -29,7 +29,7 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new GenericResponse<>(true, "User created successfully", uR));
     }
 
-    @GetMapping("/username/{username}")
+    @GetMapping("{username}")
     public ResponseEntity<GenericResponse<Object>> getUserDataByUsername(@PathVariable String username) {
         UserRequest user = userService.getUserDataByUsername(username);
         return ResponseEntity.ok(new GenericResponse<>(true, "User found successfully", user));

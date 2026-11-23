@@ -32,7 +32,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(@NonNull HttpServletRequest request) {
         return !("POST".equalsIgnoreCase(request.getMethod())
-                && "/v0/auth/signin".equals(request.getServletPath()));
+                && "/v0/signin".equals(request.getServletPath()));
     }
 
     @Override

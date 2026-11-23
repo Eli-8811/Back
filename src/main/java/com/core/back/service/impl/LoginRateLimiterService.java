@@ -54,10 +54,8 @@ public class LoginRateLimiterService implements ILoginRateLimiterService {
     @Override
     public boolean isAllowed(HttpServletRequest request) {
         String clientIp = resolveClientIp(request);
-        Long attempts = redisTemplate.execute(
-                INCREMENT_SCRIPT,
-                List.of(KEY_PREFIX + clientIp),
-                Long.toString(WINDOW.toSeconds()));
+        Long attempts = redisTemplate.execute(INCREMENT_SCRIPT, List.of(KEY_PREFIX + clientIp), Long.toString(WINDOW.toSeconds()));
+        log.info("Login attempt {} of {} in the current rate-limit window", attempts, MAX_ATTEMPTS);
         if (attempts > MAX_ATTEMPTS) {
             log.info("Login rate limit exceeded after {} attempts (limit: {})", attempts, MAX_ATTEMPTS);
         }
@@ -70,12 +68,15 @@ public class LoginRateLimiterService implements ILoginRateLimiterService {
     }
 
     private String resolveClientIp(HttpServletRequest request) {
+
         String remoteAddress = normalizeIpLiteral(request.getRemoteAddr());
+
         if (!trustedProxies.contains(remoteAddress)) {
             return remoteAddress;
         }
 
         String forwardedFor = request.getHeader("X-Forwarded-For");
+
         if (forwardedFor == null || forwardedFor.isBlank()) {
             return remoteAddress;
         }
@@ -92,19 +93,23 @@ public class LoginRateLimiterService implements ILoginRateLimiterService {
                 return address;
             }
         }
+
         return forwardedAddresses.isEmpty() ? remoteAddress : forwardedAddresses.getFirst();
+
     }
 
     private static String normalizeIpLiteral(String value) {
-        if (value == null || !(IPV4_PATTERN.matcher(value).matches()
-                || (value.contains(":") && IPV6_PATTERN.matcher(value).matches()))) {
+
+        if (value == null || !(IPV4_PATTERN.matcher(value).matches() || (value.contains(":") && IPV6_PATTERN.matcher(value).matches()))) {    
             throw new IllegalArgumentException("Invalid IP address in request or trusted proxy configuration");
         }
+
         try {
             return InetAddress.getByName(value).getHostAddress();
         } catch (UnknownHostException exception) {
             throw new IllegalArgumentException("Invalid IP address in request or trusted proxy configuration", exception);
         }
+
     }
 
 }
